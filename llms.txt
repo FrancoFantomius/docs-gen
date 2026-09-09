@@ -1,22 +1,320 @@
 # @francofantomius/docs-gen
 
-> Modern Material Design 3 static documentation generator from Markdown files, powered by Lit and Vite.
+> Modern, accessible, zero-config Material Design 3 (M3) static documentation generator from Markdown files, powered by Lit, Vite, and @francofantomius/material-components.
 
-`@francofantomius/docs-gen` compiles directories of Markdown files into an accessible, responsive Material Design 3 Single Page Application (SPA). It features full-text client-side search, 16 Material color palettes with dark/light theme switching, code blocks with copy-to-clipboard buttons, GitHub callout alerts, and an automated GitHub Actions deployment workflow for GitHub Pages.
+`@francofantomius/docs-gen` transforms a directory of Markdown (`.md`) files into an interactive, accessible Material Design 3 Single Page Application (SPA) with instant client-side search, responsive navigation drawer, syntax-highlighted code blocks with copy buttons, GitHub-style callouts, and 16 dynamic M3 color themes. It is distributed both as a reusable GitHub Composite Action for automated deployment to GitHub Pages and as a standalone CLI package (`@francofantomius/docs-gen`).
 
-## Overview
-- [Docs Gen Home](#/): Overview of features and core concepts.
-- [Getting Started](#/getting-started): Step-by-step quickstart for GitHub Actions and local CLI usage.
+---
 
-## Usage
-- [CLI Reference](#/cli): Full guide to `docs-gen dev` and `docs-gen build` commands and flags.
-- [GitHub Actions Deployment](#/github-actions): Continuous deployment workflow to GitHub Pages using the reusable composite action.
+## Guide: How to Implement docs-gen
 
-## Reference
-- [Markdown & Frontmatter Syntax](#/markdown-syntax): YAML frontmatter options, alerts (`> [!NOTE]`), tables, code blocks, and custom web components.
-- [Configuration (`docs.config.json`)](#/configuration): Centralized project configuration and option precedence.
-- [Theming & Color Palettes](#/theming): Light/dark modes, 16 Material 3 color palettes, and search bar keyboard shortcuts.
+### 1. Directory Structure
+
+Organize your documentation inside a dedicated folder (default: `docs/`) in your repository:
+
+```text
+my-project/
+├── docs/
+│   ├── docs.config.json         # Optional: site metadata and base URL
+│   ├── index.md                 # Required: home landing page (with optional hero)
+│   ├── guides/                  # Subdirectory automatically becomes a Category
+│   │   ├── getting-started.md
+│   │   └── configuration.md
+│   ├── components/              # Another category
+│   │   ├── button.md
+│   │   └── dialog.md
+│   └── reference/
+│       └── cli.md
+├── .github/
+│   └── workflows/
+│       └── deploy-docs.yml      # Automated GitHub Pages CI/CD workflow
+└── package.json                 # Optional: for local npm scripts
+```
+
+---
+
+### 2. Method A: GitHub Actions Deployment (Recommended, Zero Local Setup)
+
+To automatically build and deploy documentation to GitHub Pages on every push to `main`, create `.github/workflows/deploy-docs.yml`:
+
+```yaml
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Documentation Site
+        uses: FrancoFantomius/docs-gen@main
+        with:
+          docs-dir: 'docs'
+          output-dir: '_site'
+
+      - name: Upload GitHub Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+#### GitHub Pages Settings
+1. Go to your GitHub repository: **Settings** > **Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Push to `main`. The documentation will be built and published at `https://<owner>.github.io/<repo>/`.
+
+---
+
+### 3. Method B: Local CLI & NPM Integration
+
+#### Installation
+```bash
+npm install -D @francofantomius/docs-gen
+```
+
+#### Local Development Server (Hot-Reload)
+Starts a local Vite dev server that monitors `.md` and `.json` files and refreshes the browser automatically:
+```bash
+npx docs-gen dev --input docs --port 3000
+```
+
+#### Production Build
+Compiles all Markdown files, bundles styles and scripts, and exports static assets to the output directory:
+```bash
+npx docs-gen build --input docs --output _site --base "./"
+```
+
+#### NPM Scripts Integration
+Add the following commands to your `package.json`:
+```json
+{
+  "scripts": {
+    "docs:dev": "docs-gen dev -i docs",
+    "docs:build": "docs-gen build -i docs -o _site",
+    "docs:preview": "vite preview --outDir _site"
+  }
+}
+```
+
+---
+
+### 4. Configuration Reference (`docs.config.json`)
+
+Place `docs.config.json` inside your docs directory (`docs/docs.config.json`) or specify via `--config`:
+
+```json
+{
+  "title": "My Project",
+  "description": "Material Design 3 documentation for My Project",
+  "githubUrl": "https://github.com/my-org/my-project",
+  "baseUrl": "./"
+}
+```
+
+#### Configuration Properties
+- `title` (`string`, default: `"Documentation"`): Displayed in the top app bar, drawer header, and browser tab.
+- `description` (`string`, default: `"Material Design 3 Documentation"`): Inserted into the `<meta name="description">` tag and search index.
+- `githubUrl` (`string`, default: `""`): GitHub repository URL. When provided, a clickable GitHub icon button is rendered in the top app bar.
+- `baseUrl` (`string`, default: `"./"`): Base URL path for assets. When deploying to `https://<owner>.github.io/<repo>/`, use `"/<repo>/"`. For custom domains, use `"/"` or `"./"`.
+
+#### Precedence Order
+Options are resolved in this priority order (highest to lowest):
+1. Command-line flags (`--title`, `--base`, `--github`, etc.)
+2. Configuration file (`docs.config.json` or path passed to `--config`)
+3. GitHub Actions auto-detected environment variables (`github.event.repository.name`, `github.repository`)
+4. Built-in defaults
+
+---
+
+### 5. Writing Documentation with Markdown & YAML Frontmatter
+
+Every `.md` file inside your docs directory becomes a page in the documentation site.
+
+#### Frontmatter Schema
+Add YAML frontmatter between `---` markers at the very top of each file:
+
+```markdown
+---
+title: Button Component
+category: Components
+order: 1
+icon: smart_button
+badge: <md-button>
+description: Interactive button component following Material Design 3 guidelines.
+---
+
+# Button Component
+
+Buttons allow users to take actions and make choices with a single tap.
+```
+
+#### Frontmatter Fields
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `title` | `string` | First `# Heading` or file name | Page title shown in the top bar, drawer, and search index. |
+| `category` | `string` | Parent folder name, or `Overview`/`General` | Category section under which this page appears in the navigation drawer. |
+| `order` | `number` | `100` (or `0` for `index.md`) | Sorting order in the drawer. Lower numbers appear first. Prefixing files with digits (e.g. `01-intro.md`) sets order automatically. |
+| `icon` | `string` | `menu_book` (`home` for index) | [Material Symbols](https://fonts.google.com/icons) icon name. |
+| `badge` | `string` | `""` | Optional chip label displayed next to the title (e.g. `v1.0`, `New`, `<md-button>`). |
+| `description` | `string` | `""` | Page summary shown under the heading and indexed in client search. |
+| `hero` | `object` | `null` | *(Home page `index.md` only)* Hero banner configuration. |
+
+#### Home Page Hero Banner (`index.md`)
+Configure a Material 3 hero card on your landing page:
+
+```markdown
+---
+title: Docs Gen
+category: Overview
+order: 0
+icon: home
+hero:
+  badge: "Version 1.0 • Material Design 3"
+  title: "Modern Documentation Generator"
+  subtitle: "Write documentation in Markdown and deploy clean Material 3 SPAs to GitHub Pages."
+  actions:
+    - text: "Getting Started"
+      link: "#/guides/getting-started"
+      variant: "filled"
+      icon: "rocket_launch"
+    - text: "GitHub"
+      link: "https://github.com/my-org/my-project"
+      variant: "outlined"
+      icon: "code"
+---
+```
+Action `variant` options: `filled`, `outlined`, `tonal`, `text`.
+
+#### GitHub-Style Alert Callouts
+Use standard alert callout blockquotes:
+
+```markdown
+> [!NOTE]
+> Informational callout highlighting useful context.
+
+> [!TIP]
+> Helpful recommendations or performance best practices.
+
+> [!IMPORTANT]
+> Crucial information that users shouldn't miss.
+
+> [!WARNING]
+> Warning informing users about potential pitfalls.
+
+> [!CAUTION]
+> Warnings regarding critical errors or breaking changes.
+```
+
+#### Syntax-Highlighted Code Blocks
+Fenced code blocks are converted into `<md-code>` web components with language badges and one-click copy buttons:
+
+````markdown
+```javascript
+import { buildSite } from '@francofantomius/docs-gen';
+
+await buildSite({ input: 'docs', output: '_site' });
+```
+````
+
+#### Tables & Custom HTML
+- Standard Markdown tables are automatically wrapped in responsive horizontal scroll containers (`table-container` with `api-table`).
+- You can embed raw HTML, inline CSS, or interactive Lit Web Components directly in Markdown.
+
+---
+
+### 6. Built-in Features & User Experience
+
+- **Client-Side Search**: Press `/` or `Ctrl + K` (`Cmd + K` on macOS) to instantly focus the `<md-search-bar>`. Searches across page titles, descriptions, categories, and badges with fuzzy matching.
+- **Theme Switcher**: Instant switching between Light, Dark, and System modes, persisted in `localStorage`.
+- **16 M3 Color Schemes**: Dynamic Material 3 color generation for 16 palettes: Purple (default), Violet, Indigo, Blue, Sky, Cyan, Teal, Green, Light Green, Lime, Yellow, Orange, Deep Orange, Red, Pink, and Slate.
+- **Responsive Layout**: Docked navigation drawer on desktop screens; transitions to a modal drawer on mobile viewports.
+
+---
+
+### 7. AI & LLM Integration (`llms.txt` and `llms-full.txt`)
+
+`docs-gen` provides native, out-of-the-box support for the [llms.txt standard](https://llmstxt.org):
+- **`/llms.txt`**: Automatically generated structured index summarizing all categories, documents, and routes for fast ingestion by AI assistants and crawlers.
+- **`/llms-full.txt`**: Complete concatenated markdown containing the full text of all documentation pages in a single plain text file.
+- **Custom `llms.txt`**: If a custom `llms.txt` file is placed in your docs input folder (e.g. `docs/llms.txt`), `docs-gen` uses it directly instead of the auto-generated index.
+
+---
+
+## CLI Options Reference
+
+### `docs-gen dev`
+| Flag | Short | Default | Description |
+|---|---|---|---|
+| `--input <path>` | `-i` | `docs` | Source directory containing Markdown files |
+| `--port <number>` | `-p` | `3000` | Port for the local development server |
+| `--no-open` | | `false` | Disable opening the browser automatically |
+| `--title <title>` | `-t` | Inferred | Site title displayed in the app bar |
+| `--description <desc>` | `-d` | Inferred | Site description for search and metadata |
+| `--github <url>` | `-g` | `""` | GitHub repository link for the top app bar |
+| `--config <path>` | `-c` | `<input>/docs.config.json` | Path to custom configuration file |
+
+### `docs-gen build`
+| Flag | Short | Default | Description |
+|---|---|---|---|
+| `--input <path>` | `-i` | `docs` | Source directory containing Markdown files |
+| `--output <path>` | `-o` | `_site` | Destination directory for static build output |
+| `--base <path>` | `-b` | `./` | Base URL path for assets (e.g. `/<repo>/`) |
+| `--title <title>` | `-t` | Inferred | Site title |
+| `--description <desc>` | `-d` | Inferred | Site description |
+| `--github <url>` | `-g` | `""` | GitHub repository URL |
+| `--config <path>` | `-c` | `<input>/docs.config.json` | Path to custom configuration file |
+
+---
+
+## GitHub Action Inputs Reference (`FrancoFantomius/docs-gen@main`)
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| `docs-dir` | No | `'docs'` | Directory containing Markdown documentation |
+| `output-dir` | No | `'_site'` | Static output directory ready for Pages upload |
+| `base-url` | No | Auto (`/<repo>/`) | Base path for GitHub Pages URL routing |
+| `project-title` | No | Auto (Repo Name) | Title rendered in header and top bar |
+| `project-description` | No | Auto | SEO meta description |
+| `github-url` | No | Auto (Repo URL) | URL for the top app bar GitHub button |
+| `config` | No | `''` | Path to custom `docs.config.json` |
+
+---
+
+## Documentation Index
+
+- [Getting Started](docs/getting-started.md): Fast setup guide for GitHub Actions CI/CD and local development.
+- [CLI Reference](docs/cli.md): Full command-line options and parameters for `docs-gen dev` and `build`.
+- [GitHub Actions Deployment](docs/github-actions.md): Complete workflow configuration and GitHub Pages deployment instructions.
+- [Markdown & Frontmatter Syntax](docs/markdown-syntax.md): YAML frontmatter schema, alerts, code blocks, and hero banner guide.
+- [Configuration Reference](docs/configuration.md): `docs.config.json` schema, settings, and precedence order.
+- [Theming & Color Palettes](docs/theming.md): Material Design 3 light/dark mode, 16 color palettes, and search shortcuts.
 
 ## Optional
-- [Full Documentation Concatenated](llms-full.txt): Complete concatenated documentation in a single file for direct LLM ingestion.
+
+- [Full Documentation Concatenated](llms-full.txt): Complete markdown contents of all documentation pages.
+- [GitHub Repository](https://github.com/FrancoFantomius/docs-gen): Source code, issues, and releases.
+- [Material Web Components](https://github.com/FrancoFantomius/material-components): Lit-based Material Design 3 components powering the UI.
 

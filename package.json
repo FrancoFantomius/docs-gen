@@ -1,6 +1,6 @@
 {
   "name": "@francofantomius/docs-gen",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Modern Material Design 3 static documentation generator from Markdown files, powered by Lit and Vite.",
   "type": "module",
   "bin": {

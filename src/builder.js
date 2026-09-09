@@ -19,6 +19,39 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function getViteResolutionConfig(stagingDir) {
+  let materialComponentsEntry = path.join(packageRootDir, 'node_modules/@francofantomius/material-components/dist/index.js');
+  let materialComponentsTheme = path.join(packageRootDir, 'node_modules/@francofantomius/material-components/dist/tokens/index.js');
+
+  try {
+    materialComponentsEntry = fileURLToPath(import.meta.resolve('@francofantomius/material-components'));
+  } catch (_) {}
+
+  try {
+    materialComponentsTheme = fileURLToPath(import.meta.resolve('@francofantomius/material-components/theme'));
+  } catch (_) {}
+
+  return {
+    resolve: {
+      alias: [
+        {
+          find: '@francofantomius/material-components/theme',
+          replacement: materialComponentsTheme
+        },
+        {
+          find: '@francofantomius/material-components',
+          replacement: materialComponentsEntry
+        }
+      ]
+    },
+    server: {
+      fs: {
+        allow: [stagingDir, packageRootDir]
+      }
+    }
+  };
+}
+
 export function prepareStaging(inputDir, options = {}) {
   const resolvedInput = path.resolve(inputDir);
   if (!fs.existsSync(resolvedInput)) {
@@ -29,6 +62,25 @@ export function prepareStaging(inputDir, options = {}) {
   const stagingDir = path.resolve(process.cwd(), '.docs-gen-cache');
   if (!fs.existsSync(stagingDir)) {
     fs.mkdirSync(stagingDir, { recursive: true });
+  }
+
+  // Symlink package node_modules to staging cache so Vite/Rolldown resolves action dependencies
+  const stagingNodeModules = path.join(stagingDir, 'node_modules');
+  const packageNodeModules = path.join(packageRootDir, 'node_modules');
+  if (fs.existsSync(packageNodeModules) && stagingDir !== packageRootDir) {
+    try {
+      const lstat = fs.lstatSync(stagingNodeModules, { throwIfNoEntry: false });
+      if (lstat && lstat.isSymbolicLink()) {
+        try {
+          fs.unlinkSync(stagingNodeModules);
+        } catch (_) {}
+      }
+      if (!fs.existsSync(stagingNodeModules)) {
+        fs.symlinkSync(packageNodeModules, stagingNodeModules, 'junction');
+      }
+    } catch (err) {
+      console.warn('Could not link node_modules to staging cache:', err.message);
+    }
   }
 
   // Read config file if present (docs.config.json)
@@ -122,9 +174,13 @@ export async function buildSite(options = {}) {
   });
 
   console.log(`\nBuilding static assets with Vite (base: "${base}")...`);
+  const viteConfig = getViteResolutionConfig(stagingDir);
+
   await viteBuild({
     root: stagingDir,
     base,
+    resolve: viteConfig.resolve,
+    server: viteConfig.server,
     build: {
       outDir: outputDir,
       emptyOutDir: true,
@@ -154,12 +210,15 @@ export async function startDevServer(options = {}) {
 
   console.log(`\nStarting documentation dev server from: ${path.resolve(inputDir)}`);
   const { stagingDir } = prepareStaging(inputDir, options);
+  const viteConfig = getViteResolutionConfig(stagingDir);
 
   const server = await viteCreateServer({
     root: stagingDir,
+    resolve: viteConfig.resolve,
     server: {
       port,
-      open: options.open ?? true
+      open: options.open ?? true,
+      fs: viteConfig.server.fs
     }
   });
 
