@@ -44,7 +44,7 @@
   "homepage": "https://github.com/FrancoFantomius/docs-gen#readme",
   "dependencies": {
     "@francofantomius/material-components": "^1.1.2",
-    "commander": "^13.1.0",
+    "commander": "^15.0.0",
     "gray-matter": "^4.0.3",
     "lit": "^3.3.3",
     "marked": "^15.0.7",
