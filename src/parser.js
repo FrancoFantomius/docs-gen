@@ -172,7 +172,7 @@ export function parseMarkdownFile(filePath, docsRootDir) {
   html = enhanceTables(html);
 
   // Generate icon
-  const icon = frontmatter.icon || (isIndex ? 'home' : 'description');
+  const icon = frontmatter.icon || (isIndex ? 'home' : 'menu_book');
 
   return {
     id: routeId,
@@ -255,7 +255,7 @@ export function parseDocsDirectory(docsRootDir, options = {}) {
     value: doc.title,
     supportingText: doc.description || `${doc.category} documentation`,
     trailingSupportingText: doc.badge || doc.category,
-    icon: doc.icon || 'description',
+    icon: doc.icon || 'menu_book',
     path: doc.path,
     category: doc.category
   }));

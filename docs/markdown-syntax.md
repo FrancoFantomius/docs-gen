@@ -35,7 +35,7 @@ description: Buttons communicate actions that users can take.
 | `title` | `string` | First `# Heading` or filename | Display name in the drawer navigation, page header, and search results. |
 | `category` | `string` | Parent folder name or `Overview` | Navigation section in the sidebar drawer where this page is grouped. |
 | `order` | `number` | `100` (or `0` for `index.md`) | Order within the category. Lower numbers appear first. |
-| `icon` | `string` | `description` (`home` for index) | [Google Material Symbols](https://fonts.google.com/icons) icon name. |
+| `icon` | `string` | `menu_book` (`home` for index) | [Google Material Symbols](https://fonts.google.com/icons) icon name. |
 | `badge` | `string` | `""` | Optional pill tag displayed alongside the title in the drawer and page header (e.g. `v2.0` or `Beta`). |
 | `description` | `string` | `""` | Summary text displayed below the page title and indexed by client-side search. |
 | `hero` | `object` | `null` | *(Index page only)* Configuration for the landing page hero banner. |

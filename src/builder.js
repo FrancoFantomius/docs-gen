@@ -57,6 +57,10 @@ export function prepareStaging(inputDir, options = {}) {
   // Copy template files to staging
   fs.copyFileSync(path.join(templateDir, 'docs.css'), path.join(stagingDir, 'docs.css'));
   fs.copyFileSync(path.join(templateDir, 'docs.js'), path.join(stagingDir, 'docs.js'));
+  const svgIconPath = path.join(templateDir, 'menu_book.svg');
+  if (fs.existsSync(svgIconPath)) {
+    fs.copyFileSync(svgIconPath, path.join(stagingDir, 'menu_book.svg'));
+  }
 
   // Generate index.html with replaced metadata
   let indexHtml = fs.readFileSync(path.join(templateDir, 'index.html'), 'utf-8');
@@ -92,6 +96,9 @@ export const SEARCH_INDEX = ${JSON.stringify(parsedData.searchIndex, null, 2)};
 
   fs.writeFileSync(path.join(publicDir, 'llms.txt'), llmsTxt, 'utf-8');
   fs.writeFileSync(path.join(publicDir, 'llms-full.txt'), llmsFullTxt, 'utf-8');
+  if (fs.existsSync(svgIconPath)) {
+    fs.copyFileSync(svgIconPath, path.join(publicDir, 'menu_book.svg'));
+  }
 
   return {
     stagingDir,
@@ -129,6 +136,10 @@ export async function buildSite(options = {}) {
   // Ensure llms.txt and llms-full.txt are present at the root of the output directory
   fs.writeFileSync(path.join(outputDir, 'llms.txt'), llmsTxt, 'utf-8');
   fs.writeFileSync(path.join(outputDir, 'llms-full.txt'), llmsFullTxt, 'utf-8');
+  const svgIconPath = path.join(templateDir, 'menu_book.svg');
+  if (fs.existsSync(svgIconPath)) {
+    fs.copyFileSync(svgIconPath, path.join(outputDir, 'menu_book.svg'));
+  }
 
   console.log(`Generated llms.txt and llms-full.txt for LLMs and AI crawlers.`);
   console.log(`\nDocumentation successfully built to: ${outputDir}`);
