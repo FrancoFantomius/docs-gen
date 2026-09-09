@@ -1,0 +1,6 @@
+{
+  "title": "Docs Gen",
+  "description": "Material Design 3 static documentation generator from Markdown",
+  "githubUrl": "https://github.com/FrancoFantomius/docs-gen",
+  "baseUrl": "./"
+}

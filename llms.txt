@@ -1,0 +1,22 @@
+# @francofantomius/docs-gen
+
+> Modern Material Design 3 static documentation generator from Markdown files, powered by Lit and Vite.
+
+`@francofantomius/docs-gen` compiles directories of Markdown files into an accessible, responsive Material Design 3 Single Page Application (SPA). It features full-text client-side search, 16 Material color palettes with dark/light theme switching, code blocks with copy-to-clipboard buttons, GitHub callout alerts, and an automated GitHub Actions deployment workflow for GitHub Pages.
+
+## Overview
+- [Docs Gen Home](#/): Overview of features and core concepts.
+- [Getting Started](#/getting-started): Step-by-step quickstart for GitHub Actions and local CLI usage.
+
+## Usage
+- [CLI Reference](#/cli): Full guide to `docs-gen dev` and `docs-gen build` commands and flags.
+- [GitHub Actions Deployment](#/github-actions): Continuous deployment workflow to GitHub Pages using the reusable composite action.
+
+## Reference
+- [Markdown & Frontmatter Syntax](#/markdown-syntax): YAML frontmatter options, alerts (`> [!NOTE]`), tables, code blocks, and custom web components.
+- [Configuration (`docs.config.json`)](#/configuration): Centralized project configuration and option precedence.
+- [Theming & Color Palettes](#/theming): Light/dark modes, 16 Material 3 color palettes, and search bar keyboard shortcuts.
+
+## Optional
+- [Full Documentation Concatenated](llms-full.txt): Complete concatenated documentation in a single file for direct LLM ingestion.
+

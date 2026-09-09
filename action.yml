@@ -1,0 +1,101 @@
+name: 'Material Docs Generator'
+description: 'Build modern Material Design 3 documentation from Markdown files and prepare for GitHub Pages'
+author: 'FrancoFantomius'
+branding:
+  icon: 'book-open'
+  color: 'purple'
+
+inputs:
+  docs-dir:
+    description: 'Path to markdown documentation directory'
+    required: false
+    default: 'docs'
+  output-dir:
+    description: 'Output directory for generated static site'
+    required: false
+    default: '_site'
+  base-url:
+    description: 'Base URL path for GitHub Pages (defaults to /<repository-name>/)'
+    required: false
+    default: ''
+  project-title:
+    description: 'Documentation title displayed in top app bar'
+    required: false
+    default: ''
+  project-description:
+    description: 'Documentation description for SEO meta tag'
+    required: false
+    default: ''
+  github-url:
+    description: 'GitHub repository URL'
+    required: false
+    default: ''
+  config:
+    description: 'Path to docs.config.json file'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install docs-gen dependencies
+      shell: bash
+      run: |
+        npm --prefix ${{ github.action_path }} ci || npm --prefix ${{ github.action_path }} install --omit=dev
+
+    - name: Determine Base URL
+      id: determine-base
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.base-url }}" ]; then
+          echo "base=${{ inputs.base-url }}" >> $GITHUB_OUTPUT
+        elif [ -n "${{ github.event.repository.name }}" ]; then
+          echo "base=/${{ github.event.repository.name }}/" >> $GITHUB_OUTPUT
+        else
+          echo "base=./" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Determine Project Title
+      id: determine-title
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.project-title }}" ]; then
+          echo "title=${{ inputs.project-title }}" >> $GITHUB_OUTPUT
+        elif [ -n "${{ github.event.repository.name }}" ]; then
+          echo "title=${{ github.event.repository.name }}" >> $GITHUB_OUTPUT
+        else
+          echo "title=Documentation" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Determine GitHub URL
+      id: determine-github
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.github-url }}" ]; then
+          echo "url=${{ inputs.github-url }}" >> $GITHUB_OUTPUT
+        elif [ -n "${{ github.server_url }}" ] && [ -n "${{ github.repository }}" ]; then
+          echo "url=${{ github.server_url }}/${{ github.repository }}" >> $GITHUB_OUTPUT
+        else
+          echo "url=" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build Documentation
+      shell: bash
+      run: |
+        CMD="node ${{ github.action_path }}/bin/docs-gen.js build \
+          --input \"${{ inputs.docs-dir }}\" \
+          --output \"${{ inputs.output-dir }}\" \
+          --base \"${{ steps.determine-base.outputs.base }}\" \
+          --title \"${{ steps.determine-title.outputs.title }}\" \
+          --description \"${{ inputs.project-description }}\" \
+          --github \"${{ steps.determine-github.outputs.url }}\""
+        if [ -n "${{ inputs.config }}" ]; then
+          CMD="$CMD --config \"${{ inputs.config }}\""
+        fi
+        eval "$CMD"
+

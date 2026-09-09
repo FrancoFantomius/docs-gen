@@ -1,0 +1,53 @@
+{
+  "name": "@francofantomius/docs-gen",
+  "version": "1.0.0",
+  "description": "Modern Material Design 3 static documentation generator from Markdown files, powered by Lit and Vite.",
+  "type": "module",
+  "bin": {
+    "docs-gen": "./bin/docs-gen.js"
+  },
+  "main": "./src/index.js",
+  "files": [
+    "bin",
+    "src",
+    "template",
+    "action.yml",
+    "README.md",
+    "LICENSE",
+    "llms.txt"
+  ],
+  "scripts": {
+    "build": "node bin/docs-gen.js build --input docs --output _site",
+    "dev": "node bin/docs-gen.js dev --input docs",
+    "preview": "vite preview --outDir _site"
+  },
+  "keywords": [
+    "documentation",
+    "generator",
+    "material-design",
+    "material-3",
+    "markdown",
+    "github-pages",
+    "github-action",
+    "vite",
+    "lit"
+  ],
+  "author": "francofantomius",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FrancoFantomius/docs-gen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FrancoFantomius/docs-gen/issues"
+  },
+  "homepage": "https://github.com/FrancoFantomius/docs-gen#readme",
+  "dependencies": {
+    "@francofantomius/material-components": "^1.1.2",
+    "commander": "^13.1.0",
+    "gray-matter": "^4.0.3",
+    "lit": "^3.3.3",
+    "marked": "^15.0.7",
+    "vite": "^6.2.0"
+  }
+}
