@@ -1,6 +1,6 @@
 {
   "name": "@francofantomius/docs-gen",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Modern Material Design 3 static documentation generator from Markdown files, powered by Lit and Vite.",
   "type": "module",
   "bin": {
@@ -43,7 +43,7 @@
   },
   "homepage": "https://github.com/FrancoFantomius/docs-gen#readme",
   "dependencies": {
-    "@francofantomius/material-components": "^1.1.2",
+    "@francofantomius/material-components": "^1.3.0",
     "commander": "^15.0.0",
     "gray-matter": "^4.0.3",
     "lit": "^3.3.3",
